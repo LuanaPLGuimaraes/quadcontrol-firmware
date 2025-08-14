@@ -11,10 +11,10 @@ void appMain(void *param)
         // Turn on left green led
         ledSet(LED_GREEN_L, true);
         // Wait for 100 milliseconds (2 Hz loop)
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(100));
         // Turn off left green led
         ledSet(LED_GREEN_L, false);
         // Wait for 100 milliseconds (2 Hz loop)
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
