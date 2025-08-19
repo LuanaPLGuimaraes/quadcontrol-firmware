@@ -5,7 +5,8 @@
 // Main application loop
 void appMain(void *param)
 {
-    // Infinite loop (runs continuously while the quadcopter is powered on)
+    // Infinite 
+    // // loop (runs continuously while the quadcopter is powered on)
     while (true)
     {
         // Print message to console
