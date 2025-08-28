@@ -1,1 +1,1 @@
-obj-y += src/examples/led_blink.o
+obj-y += src/identification/lift_constant.o
