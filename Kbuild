@@ -1,1 +1,1 @@
-obj-y += src/identification/lift_constant.o
+obj-y += src/identification/drag_constant.o
