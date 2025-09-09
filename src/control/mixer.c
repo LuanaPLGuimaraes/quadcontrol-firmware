@@ -7,6 +7,7 @@
 #include "motors.h"     // Low-level motor control interface (e.g., motorsSetRatio)
 #include "debug.h"      // Debug printing functions (e.g., DEBUG_PRINT)
 #include "log.h"        // Logging utilities to send data to the CFClient
+#include "stdlib.h"
 
 // Physical constants
 static const float pi = 3.1416f; // Mathematical constant
@@ -39,9 +40,9 @@ void reference()
 
     // Extract position references from the received setpoint
     ft =  roundf((setpoint.position.z) * 2.0f) / 100.0f;    // Thrust force command [N] (maps 0.5m -> 0.01N)
-    tx = -roundf((setpoint.position.y) * 2.0f) / 1000.0f;   // Roll torque command [N.m] (maps 0.5m -> 0.001N.m)
+    tx = 0.0f;
     ty =  roundf((setpoint.position.x) * 2.0f) / 1000.0f;   // Pitch torque command [N.m] (maps 0.5m -> 0.001N.m)
-    tz = 0.0f;                                              // Yaw torque command [N.m]
+    tz = roundf((setpoint.position.y) * 2.0f) / 2500.0f;   // Roll torque command [N.m] (maps 0.5m -> 0.001N.m)
 
     // Print debug info for the control efforts
     DEBUG_PRINT("Ft (N): %.2f | Tx (N.m): %.3f | Ty (N.m): %.3f  | Tz (N.m): %.3f \n", (double)ft, (double)tx, (double)ty, (double)tz);
@@ -57,20 +58,52 @@ void mixer()
     static const float kd = 1.35e-10f; // Drag constant [N.m.s^2]
 
     // Compute required motor angular velocities squared (omega^2)
-    float omega1 = (ft/(4.0f*l))-(tx/(4.0f*kl*l))-(ty/(4.0f*kl*l))-(tz/(4.0f*kd));
+    float omega1 = (ft/(4.0f*kl))-(tx/(4.0f*kl*l))-(ty/(4.0f*kl*l))-(tz/(4.0f*kd));
     float omega2 = (ft/(4.0f*kl))-(tx/(4.0f*kl*l))+(ty/(4.0f*kl*l))+(tz/(4.0f*kd));
     float omega3 = (ft/(4.0f*kl))+(tx/(4.0f*kl*l))+(ty/(4.0f*kl*l))-(tz/(4.0f*kd));
     float omega4 = (ft/(4.0f*kl))+(tx/(4.0f*kl*l))-(ty/(4.0f*kl*l))+(tz/(4.0f*kd));
 
     // Clamp to non-negative and take square root (omega)
-    omega1 = sqrtf(abs(omega1));
-    omega2 = sqrtf(abs(omega2));
-    omega3 = sqrtf(abs(omega3));
-    omega4 = sqrtf(abs(omega4));
+    omega1 = sqrtf(fmaxf(omega1, 0.0f));
+    omega2 = sqrtf(fmaxf(omega2, 0.0f));
+    omega3 = sqrtf(fmaxf(omega3, 0.0f));
+    omega4 = sqrtf(fmaxf(omega4, 0.0f));
 
     // Compute motor PWM using motor model
     pwm1 = a2*omega1*omega1+a1*omega1;
     pwm2 = a2*omega2*omega2+a1*omega2;
     pwm3 = a2*omega3*omega3+a1*omega3;
     pwm4 = a2*omega4*omega4+a1*omega4;
+}
+
+// Apply motor commands
+void actuators()
+{
+    // Check is quadcopter is armed or disarmed
+    if (supervisorIsArmed())
+    {
+        // Apply calculated PWM values if is commanded to take-off
+        motorsSetRatio(MOTOR_M1, pwm1 * UINT16_MAX);
+        motorsSetRatio(MOTOR_M2, pwm2 * UINT16_MAX);
+        motorsSetRatio(MOTOR_M3, pwm3 * UINT16_MAX);
+        motorsSetRatio(MOTOR_M4, pwm4 * UINT16_MAX);
+    }
+    else
+    {
+        // Turn-off all motor if disarmed
+        motorsStop();
+    }
+}
+
+// Main application task
+void appMain(void *param)
+{
+    // Infinite loop (runs at 200Hz)
+    while (true)
+    {
+        reference();                  // Get reference setpoints from commander module
+        mixer();                      // Compute motor commands
+        actuators();                     // Apply motor commands
+        vTaskDelay(pdMS_TO_TICKS(5)); // Wait 5 ms
+    }
 }
