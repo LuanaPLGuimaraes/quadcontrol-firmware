@@ -15,17 +15,23 @@ void appMain(void *param)
         {
             // If armed, turn on motor 1 with 10% power
             motorsSetRatio(MOTOR_M1, 0.1f * UINT16_MAX);
+<<<<<<< HEAD
             motorsSetRatio(MOTOR_M2, 0.1f * UINT16_MAX);
             motorsSetRatio(MOTOR_M3, 0.1f * UINT16_MAX);
             motorsSetRatio(MOTOR_M4, 0.1f * UINT16_MAX);
+=======
+>>>>>>> 6c95de311542da2d768de6890b4aafbb2a449212
         }
         else
         {
             // If not armed, stop motor 1
             motorsSetRatio(MOTOR_M1, 0);
+<<<<<<< HEAD
             motorsSetRatio(MOTOR_M2, 0);
             motorsSetRatio(MOTOR_M3, 0);
             motorsSetRatio(MOTOR_M4, 0);
+=======
+>>>>>>> 6c95de311542da2d768de6890b4aafbb2a449212
         }
         // Wait for 100 milliseconds before checking again (10 Hz loop)
         vTaskDelay(pdMS_TO_TICKS(100));
