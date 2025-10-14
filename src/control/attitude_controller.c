@@ -60,9 +60,9 @@ void reference()
     commanderGetSetpoint(&setpoint, &state);
 
     // Extract position references from the received setpoint
-    ft =  (setpoint.position.z * 2.0f) / 100.0f;      // Thrust force command [N] (maps 0.5m -> 0.01N)
+    ft =  (setpoint.position.z * 2.0f) / 20.0f;      // Thrust force command [N] (maps 0.5m -> 0.05N)
     phi_r = (setpoint.position.y * 2.0f) * pi/4.0f;   // Roll reference command [rad] (maps 0.5m -> pi/4 rad)
-    theta_r = (setpoint.position.y * 2.0f) * pi/4.0f; // Pitch reference command [rad] (maps 0.5m -> pi/4 rad)
+    theta_r = (setpoint.position.x * 2.0f) * pi/4.0f; // Pitch reference command [rad] (maps 0.5m -> pi/4 rad)
     psi_r = 0.0f;                                     // Yaw reference command [rad]
 }
 
@@ -177,7 +177,21 @@ void attitudeEstimator()
 
 // Compute desired torques
 void attitudeController()
-{ 
+{
+    // Controller parameters (settling time of 0.3s and overshoot of 0,05%)
+    static const float kp = 240.28f;
+    static const float kd = 26.67f;
+    
+    // Compute angular aceleration reference 
+    float phi_ddot_r = (kp*(phi_r-phi))+(kd*(0.0f-wx));
+    float theta_ddot_r = (kp*(theta_r-theta))+(kd*(0.0f-wy));
+    float psi_ddot_r =((kp/4)*(psi_r-psi))+((kd/2)*(0.0f-wz));
+
+    
+    // Compute desired torque
+    tx = Ixx*phi_ddot_r;
+    ty = Iyy*theta_ddot_r;
+    tz = Izz*psi_ddot_r;
 }
 
 // Main application task
