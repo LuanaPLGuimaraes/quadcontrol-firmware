@@ -159,7 +159,7 @@ void attitudeEstimator()
     static const float wc = 1.0f; // Cut-off frequency [rad/s]
     static const float alpha = (wc*dt) / (1.0f + wc*dt); // Complementary filter gain
 
-        // Measured angle from accelerometer
+    // Measured angle from accelerometer
     float phi_a = atan2f(-ay, -az);
     float theta_a = atan2f(ax, sqrtf(ay*ay + az*az));
 
@@ -187,6 +187,22 @@ void attitudeEstimator()
 // Estimate vertical position/velocity from range sensor
 void verticalEstimator()
 {
+    // Estimator parameters
+    static const float wc = 10.0f;            
+    static const float zeta = sqrtf(2.0f)/2.0f;
+    static const float l1 = 2.0f*zeta*wc;
+    static const float l2 = wc*wc;              
+
+    // Measured distante from range sensor
+    float z_m = d*cosf(theta)*cosf(phi);
+
+    // Prediction step (model)
+    z = z + vz*dt; 
+    vz = vz + (-g + (ft/m))*dt;
+
+    // Correction step (measurement)
+    vz = vz + l2*dt*(z_m - z);
+    z = z + l1*dt*(z_m - z);
 }
 
 // Compute desired torques
