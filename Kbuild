@@ -1,1 +1,1 @@
-obj-y += src/control/vertical_controller.o
+obj-y += src/control/horizontal_estimator.o
