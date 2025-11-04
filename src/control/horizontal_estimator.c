@@ -179,7 +179,7 @@ void attitudeEstimator()
     static const float wc = 1.0f; // Cut-off frequency [rad/s]
     static const float alpha = (wc*dt) / (1.0f + wc*dt); // Complementary filter gain
 
-    // Measured angle from accelerometer
+    // Measured angle from accelerometer 
     float phi_a = atan2f(-ay, -az);
     float theta_a = atan2f(ax, sqrtf(ay*ay + az*az));
 
